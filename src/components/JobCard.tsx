@@ -4,8 +4,8 @@ import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 interface Props {
   job: Job;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (job: Job) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function JobCard({ job, onEdit, onDelete }: Props) {
@@ -13,20 +13,10 @@ export default function JobCard({ job, onEdit, onDelete }: Props) {
     <div className="card">
       <h3>{job.company}</h3>
       <p>{job.role}</p>
-
-      <p className="date">
-        <HiOutlineCalendar />
-        {new Date(job.dateApplied ?? "").toLocaleDateString()}
-      </p>
-
+      <p className="date"><HiOutlineCalendar /> {job.dateApplied}</p>
       <div className="actions">
-        <button onClick={onEdit}>
-          <FiEdit /> Edit
-        </button>
-
-        <button onClick={onDelete}>
-          <FiTrash2 /> Delete
-        </button>
+        <button onClick={() => onEdit(job)}><FiEdit /> Edit</button>
+        <button onClick={() => onDelete(String(job._id ?? job.id))}><FiTrash2 /> Delete</button>
       </div>
     </div>
   );

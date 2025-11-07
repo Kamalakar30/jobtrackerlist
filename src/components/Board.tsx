@@ -28,7 +28,9 @@ export default function Board() {
       "Offer Received": [],
       Rejected: [],
     };
-    jobs.forEach((j) => map[j.status]?.push(j));
+    for (const j of jobs) {
+      map[j.status]?.push(j);
+    }
     return map;
   }, [jobs]);
 
@@ -45,7 +47,8 @@ export default function Board() {
   };
 
   const handleCreate = async (data: Partial<Job>) => {
-    const created = await createJob({ ...data, status: targetStatus });
+    const payload = { ...data, status: targetStatus };
+    const created = await createJob(payload);
     setJobs((prev) => [...prev, created]);
     setModalOpen(false);
   };
@@ -78,7 +81,7 @@ export default function Board() {
         <h1>Kanban Job Tracker</h1>
       </header>
 
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex justify-end mb-4">
         <button className="add-btn" onClick={() => openCreate("Applied")}>
           <FiPlus /> Add Job
         </button>
@@ -108,7 +111,9 @@ export default function Board() {
           initial={selectedJob}
           onClose={() => setModalOpen(false)}
           onCreate={handleCreate}
-          onUpdate={(id, data) => handleUpdate(id, data)}
+          onUpdate={(updatedData) =>
+            handleUpdate(String(selectedJob?._id ?? selectedJob?.id), updatedData)
+          }
         />
       )}
     </div>
