@@ -1,0 +1,122 @@
+/* ===== Soft Neon Galaxy Background ===== */
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #8e54e9, #4776e6, #ff6fd8, #7a5fff);
+  background-size: 300% 300%;
+  animation: bgShift 12s ease infinite;
+  font-family: "Poppins", sans-serif;
+  color: #ffffff;
+}
+@keyframes bgShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== Light Attractive Header Glass Bar ===== */
+.header {
+  width: 100%;
+  padding: 26px 0;
+  text-align: center;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Glowing gradient text */
+.header h1 {
+  margin: 0;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #ffbdfd, #b2f7ff, #a98cff, #fbc2eb);
+  background-size: 300% 300%;
+  animation: glowText 6s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@keyframes glowText {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ===== Board Layout ===== */
+.board {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px;
+  flex-wrap: wrap;
+}
+
+/* ===== Glass Columns ===== */
+.column {
+  background: rgba(255,255,255,0.22);
+  border-radius: 22px;
+  padding: 20px;
+  width: 260px;
+  min-height: 65vh;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0px 12px 32px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  transition: 0.25s ease-in-out;
+}
+.column:hover {
+  transform: scale(1.03);
+}
+
+.column h2 {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 14px;
+  color: white;
+}
+
+/* ===== Job Cards ===== */
+.card {
+  background: rgba(255,255,255,0.95);
+  color: #222;
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  cursor: grab;
+  transition: transform .25s, box-shadow .25s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+}
+.card.dragging {
+  transform: scale(1.07) !important;
+  box-shadow: 0 16px 40px rgba(255,255,255,.75) !important;
+}
+
+/* ===== Add Job Button ===== */
+.add-btn {
+  margin-top: auto;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #4facfe, #6a5af9, #c86dd7);
+  border: none;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0px 8px 20px rgba(0,0,0,0.35);
+  transition: 0.25s;
+}
+.add-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 14px 32px rgba(0,0,0,0.55);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 4px; }
