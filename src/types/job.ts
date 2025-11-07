@@ -1,11 +1,11 @@
 export type JobStatus = "Applied" | "Interviewing" | "Offer Received" | "Rejected";
 
 export interface Job {
-  _id?: string;           // from Mongo (present after save)
-  id?: string;            // optional client-only id (drag fallback)
+  _id?: string;  // backend id
+  id?: string;   // fallback local
   company: string;
   role: string;
   status: JobStatus;
-  dateApplied?: string;   // ISO string
+  dateApplied?: string;
   notes?: string;
 }

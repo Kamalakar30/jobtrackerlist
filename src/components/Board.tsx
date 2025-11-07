@@ -1,110 +1,114 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { DndContext, closestCorners } from "@dnd-kit/core";
 import Column from "./Column";
-import JobModal from "./JobModal";
-import { DndContext } from "@dnd-kit/core";
-import { ReactComponent as PlusIcon } from "../icons/plus.svg"; // optional; we'll use react-icons instead
+import JobFormModal from "./JobFormModal";
+import { Job, JobStatus } from "../types/job";
+import { fetchJobs, createJob, updateJob, updateJobStatus, deleteJob } from "../api/jobs";
 import { FiPlus } from "react-icons/fi";
 
-const DEFAULT_COLUMNS = ["Applied", "Interviewing", "Offer Received", "Rejected"];
-const STORAGE_KEY = "job-tracker-v1";
+const COLUMNS: JobStatus[] = ["Applied", "Interviewing", "Offer Received", "Rejected"];
 
-function sampleJobs() {
-  return [
-    { id: "j1", company: "Acme Corp", role: "Frontend Dev", status: "Applied", appliedAt: new Date().toISOString(), notes: "Sent resume" },
-    { id: "j2", company: "Beta LLC", role: "Backend Dev", status: "Interviewing", appliedAt: new Date().toISOString(), notes: "Phone screen done" },
-    { id: "j3", company: "Gamma Inc", role: "Fullstack Intern", status: "Offer Received", appliedAt: new Date().toISOString(), notes: "Waiting for offer details" },
-  ];
-}
-
-export default function KanbanBoard() {
-  const [jobs, setJobs] = useState([]);
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
+export default function Board() {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [targetStatus, setTargetStatus] = useState<JobStatus>("Applied");
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      setJobs(JSON.parse(raw));
-    } else {
-      const s = sampleJobs();
-      setJobs(s);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-    }
+    (async () => {
+      const data = await fetchJobs();
+      setJobs(data);
+    })();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+  const grouped = useMemo(() => {
+    const map: Record<JobStatus, Job[]> = {
+      Applied: [],
+      Interviewing: [],
+      "Offer Received": [],
+      Rejected: [],
+    };
+    jobs.forEach((j) => map[j.status]?.push(j));
+    return map;
   }, [jobs]);
 
-  function createJob(payload) {
-    const newJob = {
-      id: "j" + Math.random().toString(36).slice(2, 9),
-      company: payload.company,
-      role: payload.role,
-      status: payload.status || "Applied",
-      appliedAt: payload.appliedAt || new Date().toISOString(),
-      notes: payload.notes || "",
-    };
-    setJobs((s) => [newJob, ...s]);
-  }
+  const openCreate = (status: JobStatus) => {
+    setSelectedJob(null);
+    setTargetStatus(status);
+    setModalOpen(true);
+  };
 
-  function updateJob(id, payload) {
-    setJobs((s) => s.map((j) => (j.id === id ? { ...j, ...payload } : j)));
-  }
+  const openEdit = (job: Job) => {
+    setSelectedJob(job);
+    setTargetStatus(job.status);
+    setModalOpen(true);
+  };
 
-  function deleteJob(id) {
-    setJobs((s) => s.filter((j) => j.id !== id));
-  }
+  const handleCreate = async (data: Partial<Job>) => {
+    const created = await createJob({ ...data, status: targetStatus });
+    setJobs((prev) => [...prev, created]);
+    setModalOpen(false);
+  };
 
-  function handleDragEnd(event) {
-    const { active, over } = event;
+  const handleUpdate = async (id: string, data: Partial<Job>) => {
+    const updated = await updateJob(id, data);
+    setJobs((prev) => prev.map((j) => (String(j._id ?? j.id) === id ? updated : j)));
+    setModalOpen(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteJob(id);
+    setJobs((prev) => prev.filter((j) => String(j._id ?? j.id) !== id));
+  };
+
+  const onDragEnd = async ({ active, over }: any) => {
     if (!over) return;
-    const jobId = active.id;
-    const destColumn = over.id;
-    setJobs((s) => s.map((j) => (j.id === jobId ? { ...j, status: destColumn } : j)));
-  }
+    const id = String(active.id);
+    const to = over.id as JobStatus;
+    const job = jobs.find((j) => String(j._id ?? j.id) === id);
+    if (!job || job.status === to) return;
+
+    await updateJobStatus(id, to);
+    setJobs((prev) => prev.map((j) => (String(j._id ?? j.id) === id ? { ...j, status: to } : j)));
+  };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-3">
-          <div className="text-sm text-gray-600">Columns:</div>
-          {DEFAULT_COLUMNS.map((c) => (
-            <div key={c} className="text-xs px-2 py-1 bg-white border rounded-md text-gray-700">{c}</div>
-          ))}
-        </div>
+    <div className="p-6">
+      <header className="header">
+        <h1>Kanban Job Tracker</h1>
+      </header>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => { setEditing(null); setIsModalOpen(true); }}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <FiPlus /> Add Job
-          </button>
-        </div>
+      <div className="flex items-center justify-end mb-4">
+        <button className="add-btn" onClick={() => openCreate("Applied")}>
+          <FiPlus /> Add Job
+        </button>
       </div>
 
-      <DndContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {DEFAULT_COLUMNS.map((col) => (
-            <Column
-              key={col}
-              id={col}
-              title={col}
-              jobs={jobs.filter((j) => j.status === col)}
-              onEdit={(job) => { setEditing(job); setIsModalOpen(true); }}
-              onDelete={deleteJob}
-            />
+      <DndContext collisionDetection={closestCorners} onDragEnd={onDragEnd}>
+        <div className="board">
+          {COLUMNS.map((col) => (
+            <div key={col} className="flex flex-col">
+              <Column
+                id={col}
+                title={col}
+                jobs={grouped[col]}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+              <button className="add-btn mt-3" onClick={() => openCreate(col)}>
+                + Add to {col}
+              </button>
+            </div>
           ))}
         </div>
       </DndContext>
 
-      {isModalOpen && (
-        <JobModal
-          initial={editing}
-          onClose={() => setIsModalOpen(false)}
-          onCreate={(data) => { createJob(data); setIsModalOpen(false); }}
-          onUpdate={(id, data) => { updateJob(id, data); setIsModalOpen(false); }}
+      {modalOpen && (
+        <JobFormModal
+          initial={selectedJob}
+          onClose={() => setModalOpen(false)}
+          onCreate={handleCreate}
+          onUpdate={(id, data) => handleUpdate(id, data)}
         />
       )}
     </div>
