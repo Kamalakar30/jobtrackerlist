@@ -35,10 +35,11 @@ export const fetchJobs = async () => {
   return response.data;
 };
 
-export const createJob = async (job: any) => {
-  const response = await axios.post(BASE_URL, job);
+export const updateJobStatus = async (id: string, status: string) => {
+  const response = await axios.put(`${BASE_URL}/${id}`, { status });
   return response.data;
 };
+
 
 export const updateJob = async (id: string, job: any) => {
   const response = await axios.put(`${BASE_URL}/${id}`, job);
